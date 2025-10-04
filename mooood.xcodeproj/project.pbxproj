@@ -10,9 +10,22 @@
 		A1F1E5CB2E9169BB00033B05 /* mooood.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mooood.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A107AD262E91C25F008FE17C /* Exceptions for "mooood" folder in "mooood" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A1F1E5CA2E9169BB00033B05 /* mooood */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A1F1E5CD2E9169BB00033B05 /* mooood */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A107AD262E91C25F008FE17C /* Exceptions for "mooood" folder in "mooood" target */,
+			);
 			path = mooood;
 			sourceTree = "<group>";
 		};
@@ -254,6 +267,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mooood/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your personal mood data";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -298,6 +313,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mooood/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your personal mood data";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
