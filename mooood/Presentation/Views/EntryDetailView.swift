@@ -1,11 +1,3 @@
-//
-//  EntryDetailView.swift
-//  mooood
-//
-//  Created by Boris Eder on 04.10.25.
-//
-
-
 import SwiftUI
 import SwiftData
 
@@ -87,6 +79,15 @@ struct EntryDetailView: View {
                         ) {
                             energySection
                         }
+                        
+                        // Activities
+                        ActivitiesSection(
+                            selectedActivities: Binding(
+                                get: { entry.activities },
+                                set: { entry.activities = $0 }
+                            ),
+                            onSave: saveEntry
+                        )
                         
                         // Notes
                         notesCard

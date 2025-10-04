@@ -1,11 +1,3 @@
-//
-//  InsightsView.swift
-//  mooood
-//
-//  Created by Boris Eder on 04.10.25.
-//
-
-
 import SwiftUI
 import SwiftData
 
@@ -105,6 +97,11 @@ struct InsightsView: View {
             insights.append(nutritionInsight)
         }
         
+        // Activity correlation
+        if let activityInsight = analyzeActivityImpact() {
+            insights.append(activityInsight)
+        }
+        
         // Streak info
         let streak = calculateStreak()
         if streak >= 3 {
@@ -192,6 +189,39 @@ struct InsightsView: View {
                 title: "Nutrition Impact",
                 message: "Healthy eating improves your mood",
                 gradient: [.green, .mint]
+            )
+        }
+        
+        return nil
+    }
+    
+    private func analyzeActivityImpact() -> Insight? {
+        let completeEntries = entries.filter { $0.isComplete }
+        guard completeEntries.count >= 7 else { return nil }
+        
+        var activityMoodScores: [String: (totalMood: Int, count: Int)] = [:]
+        
+        for entry in completeEntries {
+            guard let mood = entry.mood, !entry.activities.isEmpty else { continue }
+            
+            for activity in entry.activities {
+                let current = activityMoodScores[activity, default: (0, 0)]
+                activityMoodScores[activity] = (current.totalMood + mood, current.count + 1)
+            }
+        }
+        
+        let activityAverages = activityMoodScores
+            .filter { $0.value.count >= 3 }
+            .mapValues { Double($0.totalMood) / Double($0.count) }
+        
+        guard let bestActivity = activityAverages.max(by: { $0.value < $1.value }) else { return nil }
+        
+        if let activity = Activity.allCases.first(where: { $0.rawValue == bestActivity.key }) {
+            return Insight(
+                icon: activity.icon,
+                title: "Activity Boost",
+                message: "\(activity.rawValue) makes you happiest",
+                gradient: [activity.color.opacity(0.8), activity.color.opacity(0.4)]
             )
         }
         

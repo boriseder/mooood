@@ -340,6 +340,33 @@ struct HistoryView: View {
                     metricBadge(icon: "bolt.fill", value: entry.energy ?? 0, color: .orange)
                 }
                 
+                if !entry.activities.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(entry.activities.prefix(3), id: \.self) { activityName in
+                            if let activity = Activity.allCases.first(where: { $0.rawValue == activityName }) {
+                                HStack(spacing: 3) {
+                                    Image(systemName: activity.icon)
+                                        .font(.system(size: 9))
+                                    Text(activity.rawValue)
+                                        .font(.caption2)
+                                }
+                                .foregroundStyle(activity.color)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(activity.color.opacity(0.15))
+                                .clipShape(Capsule())
+                            }
+                        }
+                        
+                        if entry.activities.count > 3 {
+                            Text("+\(entry.activities.count - 3)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.top, 6)
+                }
+                
                 if let notes = entry.notes, !notes.isEmpty {
                     Text(notes)
                         .font(.caption)
@@ -396,11 +423,12 @@ struct HistoryView: View {
     }
     
     private func generateCSV() -> URL {
-        var csv = "Date,Mood,Sleep,Nutrition,Energy,Notes\n"
+        var csv = "Date,Mood,Sleep,Nutrition,Energy,Activities,Notes\n"
         
         for entry in completeEntries.reversed() {
             let dateString = entry.date.formatted(date: .numeric, time: .omitted)
-            csv += "\(dateString),\(entry.mood ?? 0),\(entry.sleep ?? 0),\(entry.nutrition ?? 0),\(entry.energy ?? 0),\"\(entry.notes ?? "")\"\n"
+            let activitiesString = entry.activities.joined(separator: "; ")
+            csv += "\(dateString),\(entry.mood ?? 0),\(entry.sleep ?? 0),\(entry.nutrition ?? 0),\(entry.energy ?? 0),\"\(activitiesString)\",\"\(entry.notes ?? "")\"\n"
         }
         
         let tempURL = FileManager.default.temporaryDirectory

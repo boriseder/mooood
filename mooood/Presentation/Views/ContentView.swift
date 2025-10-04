@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var showHistory = false
     @State private var showReminderSettings = false
     @State private var showSecuritySettings = false
+    @State private var showCalendar = false
     @AppStorage("dailyReminderEnabled") private var reminderEnabled = false
     @AppStorage("dailyReminderHour") private var reminderHour = 20
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
@@ -109,6 +110,15 @@ struct ContentView: View {
                             energySection
                         }
                         
+                        // Activities
+                        ActivitiesSection(
+                            selectedActivities: Binding(
+                                get: { todayEntry.activities },
+                                set: { todayEntry.activities = $0 }
+                            ),
+                            onSave: saveEntry
+                        )
+                        
                         // Notes
                         notesCard
                         
@@ -164,23 +174,42 @@ struct ContentView: View {
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showHistory = true
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(.ultraThinMaterial)
-                                .frame(width: 36, height: 36)
-                            
-                            Image(systemName: "chart.xyaxis.line")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.primary)
+                    HStack(spacing: 8) {
+                        Button {
+                            showCalendar = true
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .frame(width: 36, height: 36)
+                                
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                        
+                        Button {
+                            showHistory = true
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .frame(width: 36, height: 36)
+                                
+                                Image(systemName: "chart.xyaxis.line")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                            }
                         }
                     }
                 }
             }
             .sheet(isPresented: $showHistory) {
                 HistoryView(entries: entries)
+            }
+            .sheet(isPresented: $showCalendar) {
+                CalendarView(entries: entries)
             }
             .sheet(isPresented: $showReminderSettings) {
                 ReminderSettingsView(
