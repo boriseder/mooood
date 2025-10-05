@@ -7,8 +7,9 @@ struct CalendarView: View {
     let entries: [DailyEntry]
     
     @State private var currentMonth = Date()
-    @State private var selectedDate: Date?
+    @State private var selectedEntry: DailyEntry?
     @State private var showEntryDetail = false
+    @State private var newEntryDate: Date?
     
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
@@ -55,13 +56,23 @@ struct CalendarView: View {
                     .font(.subheadline.weight(.medium))
                 }
             }
-            .sheet(item: $selectedDate) { date in
-                if let entry = getEntry(for: date) {
-                    EntryDetailView(entry: entry)
-                } else {
-                    createEntryView(for: date)
+            .sheet(item: $selectedEntry) { entry in
+                EntryDetailView(entry: entry)
+            }
+            .sheet(isPresented: $showEntryDetail) {
+                if let date = newEntryDate {
+                    EntryDetailView(entry: createEntry(for: date))
                 }
             }
+        }
+    }
+    
+    private func handleDayTap(_ date: Date) {
+        if let entry = getEntry(for: date) {
+            selectedEntry = entry
+        } else {
+            newEntryDate = date
+            showEntryDetail = true
         }
     }
     
@@ -123,7 +134,7 @@ struct CalendarView: View {
                             isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
                         )
                         .onTapGesture {
-                            selectedDate = date
+                            handleDayTap(date)
                         }
                     } else {
                         Color.clear
@@ -176,10 +187,10 @@ struct CalendarView: View {
         entries.first { calendar.isDate($0.date, inSameDayAs: date) }
     }
     
-    private func createEntryView(for date: Date) -> some View {
+    private func createEntry(for date: Date) -> DailyEntry {
         let entry = DailyEntry(date: date)
         modelContext.insert(entry)
-        return EntryDetailView(entry: entry)
+        return entry
     }
 }
 
@@ -264,13 +275,5 @@ struct LegendItem: View {
             Text(label)
                 .foregroundStyle(.secondary)
         }
-    }
-}
-
-// MARK: - Date Extension for Sheet
-
-extension Date: Identifiable {
-    public var id: TimeInterval {
-        self.timeIntervalSince1970
     }
 }

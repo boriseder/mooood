@@ -1,11 +1,3 @@
-//
-//  BiometricLockView.swift
-//  mooood
-//
-//  Created by Boris Eder on 04.10.25.
-//
-
-
 import SwiftUI
 import LocalAuthentication
 
@@ -122,44 +114,5 @@ struct BiometricLockView: View {
             }
         }
         return "lock.fill"
-    }
-}
-
-// MARK: - Biometric Settings
-struct BiometricSettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var enabled: Bool
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Toggle("Require Authentication", isOn: $enabled)
-                } header: {
-                    Text("Privacy")
-                } footer: {
-                    Text("Use Face ID, Touch ID, or passcode to unlock the app")
-                }
-                
-                Section {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                        Text("If you forget your passcode, you'll need to reinstall the app and lose your data.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .navigationTitle("Security")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
     }
 }

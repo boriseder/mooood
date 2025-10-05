@@ -6,9 +6,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DailyEntry.date, order: .reverse) private var entries: [DailyEntry]
     @State private var showHistory = false
-    @State private var showReminderSettings = false
-    @State private var showSecuritySettings = false
     @State private var showCalendar = false
+    @State private var showSettings = false
     @AppStorage("dailyReminderEnabled") private var reminderEnabled = false
     @AppStorage("dailyReminderHour") private var reminderHour = 20
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
@@ -48,7 +47,6 @@ struct ContentView: View {
     var mainContent: some View {
         NavigationStack {
             ZStack {
-                // Modern gradient background
                 LinearGradient(
                     colors: [
                         Color(.systemBackground),
@@ -61,11 +59,17 @@ struct ContentView: View {
                 
                 ScrollView {
                     VStack(spacing: 28) {
-                        // Header with completion indicator
-                        headerView
+                        StreakCard(streak: entries.calculateStreak())
+                            .padding(.horizontal, 20)
                             .padding(.top, 8)
                         
-                        // Categories
+                        WeeklySummaryCard(entries: entries)
+                            .padding(.horizontal, 20)
+                        
+                        Text(Date.now.formatted(date: .complete, time: .omitted))
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                        
                         modernCategoryCard(
                             title: "How do you feel?",
                             subtitle: "Select your overall mood",
@@ -110,7 +114,6 @@ struct ContentView: View {
                             energySection
                         }
                         
-                        // Activities
                         ActivitiesSection(
                             selectedActivities: Binding(
                                 get: { todayEntry.activities },
@@ -119,7 +122,6 @@ struct ContentView: View {
                             onSave: saveEntry
                         )
                         
-                        // Notes
                         notesCard
                         
                         Spacer(minLength: 20)
@@ -132,33 +134,17 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 8) {
-                        Button {
-                            showSecuritySettings = true
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(.ultraThinMaterial)
-                                    .frame(width: 36, height: 36)
-                                
-                                Image(systemName: biometricLockEnabled ? "lock.fill" : "lock.open")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(biometricLockEnabled ? .blue : .primary)
-                            }
-                        }
-                        
-                        Button {
-                            showReminderSettings = true
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(.ultraThinMaterial)
-                                    .frame(width: 36, height: 36)
-                                
-                                Image(systemName: reminderEnabled ? "bell.fill" : "bell")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(reminderEnabled ? .blue : .primary)
-                            }
+                    Button {
+                        showSettings = true
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 36, height: 36)
+                            
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.primary)
                         }
                     }
                 }
@@ -211,15 +197,14 @@ struct ContentView: View {
             .sheet(isPresented: $showCalendar) {
                 CalendarView(entries: entries)
             }
-            .sheet(isPresented: $showReminderSettings) {
-                ReminderSettingsView(
-                    enabled: $reminderEnabled,
-                    hour: $reminderHour,
-                    minute: $reminderMinute
+            .sheet(isPresented: $showSettings) {
+                SettingsView(
+                    biometricLockEnabled: $biometricLockEnabled,
+                    reminderEnabled: $reminderEnabled,
+                    reminderHour: $reminderHour,
+                    reminderMinute: $reminderMinute,
+                    entries: entries
                 )
-            }
-            .sheet(isPresented: $showSecuritySettings) {
-                BiometricSettingsView(enabled: $biometricLockEnabled)
             }
             .onAppear {
                 requestNotificationPermissions()
@@ -245,46 +230,6 @@ struct ContentView: View {
                 }
             }
         }
-    }
-    
-    private var headerView: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Today's Progress")
-                    .font(.title2.bold())
-                
-                Text(progressText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-                    .frame(width: 60, height: 60)
-                
-                Circle()
-                    .trim(from: 0, to: completionPercentage)
-                    .stroke(
-                        AngularGradient(
-                            colors: [.blue, .purple, .pink, .blue],
-                            center: .center
-                        ),
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 60, height: 60)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.spring(response: 0.6, dampingFraction: 0.7), value: completionPercentage)
-                
-                Text("\(Int(completionPercentage * 100))%")
-                    .font(.caption.bold())
-            }
-        }
-        .padding(20)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
     
     private var emojiSection: some View {
@@ -430,25 +375,6 @@ struct ContentView: View {
         .shadow(color: gradient.first!.opacity(0.3), radius: 12, y: 6)
     }
     
-    private var completionPercentage: Double {
-        let fields = [todayEntry.mood, todayEntry.sleep, todayEntry.nutrition, todayEntry.energy]
-        let completed = fields.compactMap { $0 }.count
-        return Double(completed) / 4.0
-    }
-    
-    private var progressText: String {
-        let completed = [todayEntry.mood, todayEntry.sleep, todayEntry.nutrition, todayEntry.energy]
-            .compactMap { $0 }.count
-        
-        switch completed {
-        case 0: return "Let's get started!"
-        case 1...2: return "Keep going..."
-        case 3: return "Almost there!"
-        case 4: return "All done! 🎉"
-        default: return ""
-        }
-    }
-    
     private func saveEntry() {
         try? modelContext.save()
         let generator = UIImpactFeedbackGenerator(style: .light)
@@ -485,55 +411,5 @@ struct ContentView: View {
     
     private func cancelReminder() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["dailyReminder"])
-    }
-}
-
-// MARK: - Reminder Settings View
-struct ReminderSettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var enabled: Bool
-    @Binding var hour: Int
-    @Binding var minute: Int
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Toggle("Daily Reminder", isOn: $enabled)
-                }
-                
-                if enabled {
-                    Section {
-                        DatePicker(
-                            "Reminder Time",
-                            selection: Binding(
-                                get: {
-                                    Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? Date()
-                                },
-                                set: { newDate in
-                                    let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
-                                    hour = components.hour ?? 20
-                                    minute = components.minute ?? 0
-                                }
-                            ),
-                            displayedComponents: .hourAndMinute
-                        )
-                    } header: {
-                        Text("Schedule")
-                    } footer: {
-                        Text("You'll receive a notification at this time each day")
-                    }
-                }
-            }
-            .navigationTitle("Reminder Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
     }
 }
